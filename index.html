@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raksha Bandhan for Sanjana</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/typed.js/2.1.0/typed.umd.js"></script>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #ff9a8b, #ff6a88, #4c68d7);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            overflow: hidden;
+        }
+        #card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+            padding: 30px;
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            animation: fadeIn 2s ease-in-out;
+            position: relative;
+            z-index: 1;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        #canvas-container {
+            margin: 20px auto;
+            border: 5px solid #ff6a88;
+            border-radius: 15px;
+            padding: 15px;
+            background: #fff;
+            cursor: pointer;
+        }
+        h1 {
+            color: #c2185b;
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #message {
+            color: #333;
+            font-size: 1.4em;
+            line-height: 1.6;
+            margin: 0 20px;
+            min-height: 80px;
+        }
+        #timestamp {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        button {
+            background: #c2185b;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2em;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: #ad1457;
+            transform: translateY(-2px);
+        }
+        #confetti-canvas, #balloon-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+        #photo-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        #photo-overlay img {
+            max-width: 90%;
+            max-height: 90%;
+            border: 5px solid #ff6a88;
+            border-radius: 10px;
+        }
+        #photo-overlay button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #c2185b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #button-highlight, #star-button-highlight {
+            max-width: 200px;
+            margin-top: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        @media (max-width: 500px) {
+            h1 { font-size: 2em; }
+            #message { font-size: 1.1em; }
+            #canvas-container { padding: 10px; }
+            button { font-size: 1em; padding: 10px 20px; }
+            #timestamp { font-size: 0.7em; }
+            #button-highlight, #star-button-highlight { max-width: 150px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="card">
+        <h1>Happy Raksha Bandhan To my dear sister-Sanjana</h1>
+        <div id="canvas-container" onclick="showPhoto()"></div>
+        <p id="message"></p>
+        <p id="timestamp">Created with ❤️ on <span id="date"></span></p>
+        <button onclick="toggleMessage()">Secret Message for You</button>
+        <img id="button-highlight" src="button-highlight.png" alt="Click the Secret Message button above">
+        <button onclick="showPhoto()">Show Another Photo</button>
+        <img id="star-button-highlight" src="star-button.png" alt="Click the Show Another Photo button above">
+    </div>
+    <canvas id="confetti-canvas"></canvas>
+    <canvas id="balloon-canvas"></canvas>
+    <div id="photo-overlay">
+        <button onclick="hidePhoto()">Close</button>
+        <img id="sister-photo" src="sanjana1.png" alt="Sanjana's Photo">
+    </div>
+
+    <script>
+        let angle = 0;
+        let pulse = 120;
+        let sparkles = [];
+        let balloons = [];
+        let typed;
+        let confetti = [];
+        let p5Canvas;
+
+        function setup() {
+            try {
+                p5Canvas = createCanvas(300, 300);
+                p5Canvas.parent('canvas-container');
+                for (let i = 0; i < 20; i++) {
+                    sparkles.push({
+                        x: random(-120, 120),
+                        y: random(-120, 120),
+                        size: random(5, 12),
+                        alpha: random(50, 255)
+                    });
+                }
+                for (let i = 0; i < 5; i++) {
+                    balloons.push({
+                        x: random(50, window.innerWidth - 50),
+                        y: window.innerHeight + random(0, 100),
+                        speed: random(2, 4),
+                        sway: random(0, TWO_PI),
+                        color: ['#ff6a88', '#ffd700', '#00cyan'][floor(random(3))],
+                        size: random(30, 50)
+                    });
+                }
+                initTyped();
+            } catch (e) {
+                console.error('Error in setup:', e.message, e.stack);
+                document.querySelector('#message').innerHTML = "Dear Sanjana, <br> This Raksha Bandhan, I vow to be your shield and support forever. You are my shining star and best companion! 🌸";
+                document.querySelector('#canvas-container').innerHTML = "<p style='color: #c2185b;'>Rakhi animation unavailable due to loading issues.</p>";
+            }
+        }
+
+        function draw() {
+            try {
+                if (!p5Canvas) throw new Error('p5Canvas is not initialized');
+                background(255);
+                translate(width / 2, height / 2);
+                rotate(radians(angle));
+                angle += 0.5;
+
+                // Star-like Rakhi
+                let scale = constrain(pulse + 10 * sin(frameCount * 0.04), 100, 130);
+                fill('#ff69b4');
+                drawStar(0, 0, 8, scale * 0.7, scale * 0.3);
+                fill('#ffdab9');
+                ellipse(0, 0, scale * 0.4, scale * 0.4);
+
+                // Sparkles
+                noStroke();
+                for (let sparkle of sparkles) {
+                    fill('#ffff99', sparkle.alpha);
+                    ellipse(sparkle.x, sparkle.y, sparkle.size, sparkle.size);
+                    sparkle.alpha -= 1.5;
+                    if (sparkle.alpha < 0) {
+                        sparkle.x = random(-120, 120);
+                        sparkle.y = random(-120, 120);
+                        sparkle.size = random(5, 12);
+                        sparkle.alpha = random(50, 255);
+                    }
+                }
+
+                // Decorative dots
+                fill('#ff4500');
+                for (let i = 0; i < 12; i++) {
+                    let angle = TWO_PI / 12 * i;
+                    let x = cos(angle) * scale * 0.6;
+                    let y = sin(angle) * scale * 0.6;
+                    if (isNaN(x) || isNaN(y)) continue;
+                    ellipse(x, y, 10, 10);
+                }
+
+                // Balloons on separate canvas
+                let balloonCanvas = document.getElementById('balloon-canvas');
+                if (balloonCanvas) {
+                    balloonCanvas.width = window.innerWidth;
+                    balloonCanvas.height = window.innerHeight;
+                    let ctx = balloonCanvas.getContext('2d');
+                    ctx.clearRect(0, 0, balloonCanvas.width, balloonCanvas.height);
+                    for (let b of balloons) {
+                        ctx.fillStyle = b.color;
+                        ctx.beginPath();
+                        ctx.ellipse(b.x, b.y, b.size / 2, b.size * 0.6, 0, 0, TWO_PI);
+                        ctx.fill();
+                        ctx.strokeStyle = '#666';
+                        ctx.beginPath();
+                        ctx.moveTo(b.x, b.y + b.size * 0.6);
+                        ctx.lineTo(b.x, b.y + b.size * 0.8);
+                        ctx.stroke();
+                        ctx.fillStyle = '#fff';
+                        ctx.font = '12px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('Sanjana', b.x, b.y);
+                        b.y -= b.speed;
+                        b.x += sin(frameCount * 0.05 + b.sway) * 0.5;
+                        if (b.y < -b.size) {
+                            b.y = window.innerHeight + b.size;
+                            b.x = random(50, window.innerWidth - 50);
+                            b.speed = random(2, 4);
+                            b.sway = random(0, TWO_PI);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Error in draw:', e.message, 'Stack:', e.stack);
+            }
+        }
+
+        function drawStar(x, y, points, outerRadius, innerRadius) {
+            try {
+                if (isNaN(x) || isNaN(y) || isNaN(outerRadius) || isNaN(innerRadius) || outerRadius <= 0 || innerRadius <= 0) {
+                    throw new Error('Invalid star parameters: x=' + x + ', y=' + y + ', outerRadius=' + outerRadius + ', innerRadius=' + innerRadius);
+                }
+                let angle = TWO_PI / points;
+                beginShape();
+                for (let i = 0; i < TWO_PI; i += angle) {
+                    let sx = x + cos(i) * outerRadius;
+                    let sy = y + sin(i) * outerRadius;
+                    vertex(sx, sy);
+                    sx = x + cos(i + angle / 2) * innerRadius;
+                    sy = y + sin(i + angle / 2) * innerRadius;
+                    vertex(sx, sy);
+                }
+                endShape(CLOSE);
+            } catch (e) {
+                console.error('Error in drawStar:', e.message);
+            }
+        }
+
+        function initTyped() {
+            try {
+                typed = new Typed('#message', {
+                    strings: [
+                        "Dear Didi, <br> On this Raksha Bandhan, I promise to always be by your side — your shield, your strength, and your biggest supporter. 💖 You’re not just my sister, but my guide, my laughter, and my forever friend. 🌸"
+                    ],
+                    typeSpeed: 50,
+                    showCursor: false,
+                    onComplete: () => console.log('Typed.js initialized')
+                });
+            } catch (error) {
+                console.error('Error initializing Typed.js:', error);
+            }
+        }
+
+        function toggleMessage() {
+            try {
+                if (typed) typed.destroy();
+                let message = document.querySelector('#message');
+                let text = "Sanjana, my dearest Didi,<br>You are my priceless treasure, and this Rakhi is a reminder of our unbreakable bond. Here’s to creating countless cherished memories together. 💖^1000";
+                if (message.innerHTML.includes("Secret")) {
+                    typed = new Typed('#message', {
+                        strings: [text],
+                        typeSpeed: 50,
+                        showCursor: false
+                    });
+                } else {
+                    typed = new Typed('#message', {
+                        strings: [text],
+                        typeSpeed: 50,
+                        showCursor: false
+                    });
+                }
+                triggerConfetti();
+            } catch (e) {
+                console.error('Error in toggleMessage:', e.message);
+                document.querySelector('#message').innerHTML =
+                    "Sanjana, my dearest Didi,<br>You are my priceless treasure, and this Rakhi is a reminder of our unbreakable bond. Here’s to creating countless cherished memories together. 💖";
+            }
+        }
+
+        function triggerConfetti() {
+            try {
+                let confettiCanvas = document.getElementById('confetti-canvas');
+                if (!confettiCanvas) throw new Error('Confetti canvas not found');
+                confettiCanvas.width = window.innerWidth;
+                confettiCanvas.height = window.innerHeight;
+                let ctx = confettiCanvas.getContext('2d');
+                confetti = [];
+                for (let i = 0; i < 50; i++) {
+                    confetti.push({
+                        x: random(0, confettiCanvas.width),
+                        y: random(-confettiCanvas.height, 0),
+                        size: random(5, 8),
+                        speed: random(2, 4),
+                        color: `hsl(${random(0, 360)}, 100%, 50%)`
+                    });
+                }
+                animateConfetti(ctx, confettiCanvas);
+            } catch (e) {
+                console.error('Error in triggerConfetti:', e.message);
+            }
+        }
+
+        function animateConfetti(ctx, canvas) {
+            try {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let c of confetti) {
+                    ctx.fillStyle = c.color;
+                    ctx.beginPath();
+                    ctx.arc(c.x, c.y, c.size, 0, TWO_PI);
+                    ctx.fill();
+                    c.y += c.speed;
+                    c.x += sin(c.y * 0.05) * 2;
+                    if (c.y > canvas.height) {
+                        c.y = -c.size;
+                        c.x = random(0, canvas.width);
+                    }
+                }
+                if (confetti.length > 0) {
+                    requestAnimationFrame(() => animateConfetti(ctx, canvas));
+                }
+            } catch (e) {
+                console.error('Error in animateConfetti:', e.message);
+            }
+        }
+
+        function windowResized() {
+            try {
+                let confettiCanvas = document.getElementById('confetti-canvas');
+                confettiCanvas.width = window.innerWidth;
+                confettiCanvas.height = window.innerHeight;
+                let balloonCanvas = document.getElementById('balloon-canvas');
+                balloonCanvas.width = window.innerWidth;
+                balloonCanvas.height = window.innerHeight;
+            } catch (e) {
+                console.error('Error in windowResized:', e.message);
+            }
+        }
+
+        function showPhoto() {
+            try {
+                document.getElementById('photo-overlay').style.display = 'flex';
+            } catch (e) {
+                console.error('Error in showPhoto:', e.message);
+            }
+        }
+
+        function hidePhoto() {
+            try {
+                document.getElementById('photo-overlay').style.display = 'none';
+            } catch (e) {
+                console.error('Error in hidePhoto:', e.message);
+            }
+        }
+
+        // Handle image loading errors
+        document.getElementById('button-highlight').onerror = function() {
+            this.style.display = 'none';
+            let fallback = document.createElement('p');
+            fallback.innerHTML = 'Click the "Secret Message for You" button above!';
+            fallback.style.color = '#c2185b';
+            fallback.style.marginTop = '10px';
+            document.getElementById('card').appendChild(fallback);
+        };
+
+        document.getElementById('star-button-highlight').onerror = function() {
+            this.style.display = 'none';
+            let fallback = document.createElement('p');
+            fallback.innerHTML = 'Click the "Show Another Photo" button above!';
+            fallback.style.color = '#c2185b';
+            fallback.style.marginTop = '10px';
+            document.getElementById('card').appendChild(fallback);
+        };
+
+        // Set timestamp date
+        document.getElementById('date').textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
+
+        // Ensure scripts are loaded
+        window.onload = function() {
+            if (typeof p5 === 'undefined' || typeof Typed === 'undefined') {
+                console.error('One or more scripts failed to load. Using fallback display.');
+                document.querySelector('#message').innerHTML = "Sanjana, my dearest Didi,<br>You are my priceless treasure, and this Rakhi is a reminder of our unbreakable bond. Here’s to creating countless cherished memories together. 💖";
+                document.querySelector('#canvas-container').innerHTML = "<p style='color: #c2185b;'>Rakhi animation unavailable due to loading issues.</p>";
+            }
+        };
+    </script>
+</body>
+</html>
